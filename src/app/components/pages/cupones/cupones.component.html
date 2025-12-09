@@ -1,0 +1,282 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-slate-800">Gestión de Cupones</h1>
+      <p class="text-slate-600 mt-1">Administra los cupones de descuento</p>
+    </div>
+    <button
+      (click)="abrirModal()"
+      class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 shadow-lg transition-all flex items-center space-x-2"
+    >
+      <i class="fas fa-plus"></i>
+      <span>Nuevo Cupón</span>
+    </button>
+  </div>
+
+  <!-- Buscador -->
+  <div class="bg-white rounded-2xl shadow-md p-6">
+    <div class="relative">
+      <input
+        type="text"
+        [(ngModel)]="busqueda"
+        (keyup)="buscarCupone()"
+        placeholder="Buscar por código..."
+        class="w-full px-4 py-3 pl-12 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <i class="fas fa-search absolute left-4 top-4 text-slate-400"></i>
+    </div>
+  </div>
+
+  <!-- Tabla de Cupones -->
+  <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-slate-800 to-slate-700 text-white">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Código</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Tipo Descuento</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Descuento</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Tipo Contador</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Usos</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Segmento</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Estado</th>
+            <th class="px-6 py-4 text-center text-sm font-semibold">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          @for (cupone of cuponesFiltrados | paginate: { itemsPerPage: itemsPorPagina, currentPage: paginaActual }; track cupone._id) {
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="px-6 py-4">
+                <span class="font-bold text-blue-600">{{ cupone.code }}</span>
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">
+                {{ obtenerTextoTipoDescuento(cupone.type_discount) }}
+              </td>
+              <td class="px-6 py-4 text-sm font-semibold text-green-600">
+                {{ cupone.type_discount === 1 ? cupone.discount + '%' : '$' + cupone.discount }}
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">
+                {{ obtenerTextoTipoContador(cupone.type_count) }}
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">
+                {{ cupone.type_count === 2 ? cupone.num_use : 'Ilimitado' }}
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">
+                {{ obtenerTextoSegmento(cupone.type_segment) }}
+              </td>
+              <td class="px-6 py-4">
+                <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + obtenerColorEstado(cupone.state)">
+                  {{ cupone.state === 1 ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center justify-center space-x-2">
+                  <button
+                    (click)="abrirModal(cupone)"
+                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Editar"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button
+                    (click)="eliminarCupone(cupone)"
+                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Eliminar"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="px-6 py-12 text-center text-slate-500">
+                <i class="fas fa-ticket-alt text-4xl mb-4 text-slate-300"></i>
+                <p class="text-lg font-semibold">No se encontraron cupones</p>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-center">
+      <pagination-controls
+        (pageChange)="paginaActual = $event"
+        previousLabel="Anterior"
+        nextLabel="Siguiente"
+      ></pagination-controls>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear/Editar Cupón -->
+@if (showModal) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8">
+      <!-- Header Modal -->
+      <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+        <h2 class="text-xl font-bold text-white">
+          {{ isEditing ? 'Editar Cupón' : 'Nuevo Cupón' }}
+        </h2>
+        <button (click)="cerrarModal()" class="text-white hover:bg-white/20 p-2 rounded-lg transition-colors">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Body Modal -->
+      <form [formGroup]="cuponeForm" (ngSubmit)="guardarCupone()" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Código -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Código del Cupón <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              formControlName="code"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+              placeholder="DESCUENTO20"
+            />
+          </div>
+
+          <!-- Tipo de Descuento -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Tipo de Descuento</label>
+            <select
+              formControlName="type_discount"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option [value]="1">Porcentaje (%)</option>
+              <option [value]="2">Moneda ($)</option>
+            </select>
+          </div>
+
+          <!-- Descuento -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Valor del Descuento <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              formControlName="discount"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="20"
+            />
+          </div>
+
+          <!-- Tipo Contador -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Tipo de Contador</label>
+            <select
+              formControlName="type_count"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option [value]="1">Ilimitado</option>
+              <option [value]="2">Limitado</option>
+            </select>
+          </div>
+
+          <!-- Número de Usos -->
+          @if (cuponeForm.get('type_count')?.value === 2) {
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Número de Usos</label>
+              <input
+                type="number"
+                formControlName="num_use"
+                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="100"
+              />
+            </div>
+          }
+
+          <!-- Tipo de Segmento -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Aplicar a</label>
+            <select
+              formControlName="type_segment"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option [value]="1">Productos</option>
+              <option [value]="2">Categorías</option>
+            </select>
+          </div>
+
+          <!-- Estado -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Estado</label>
+            <div class="flex items-center space-x-4 pt-2">
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" formControlName="state" [value]="1" class="mr-2" />
+                <span class="text-sm text-slate-700">Activo</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" formControlName="state" [value]="0" class="mr-2" />
+                <span class="text-sm text-slate-700">Inactivo</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Productos -->
+        @if (cuponeForm.get('type_segment')?.value === 1) {
+          <div class="border-t pt-4">
+            <label class="block text-sm font-semibold text-slate-700 mb-3">Seleccionar Productos</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-slate-200 rounded-lg">
+              @for (producto of productos; track producto._id) {
+                <label class="flex items-center p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    [checked]="productosSeleccionados.includes(producto._id!)"
+                    (change)="toggleProducto(producto._id!)"
+                    class="mr-3"
+                  />
+                  <span class="text-sm text-slate-700">{{ producto.title }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Categorías -->
+        @if (cuponeForm.get('type_segment')?.value === 2) {
+          <div class="border-t pt-4">
+            <label class="block text-sm font-semibold text-slate-700 mb-3">Seleccionar Categorías</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-slate-200 rounded-lg">
+              @for (categoria of categorias; track categoria._id) {
+                <label class="flex items-center p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    [checked]="categoriasSeleccionadas.includes(categoria._id!)"
+                    (change)="toggleCategoria(categoria._id!)"
+                    class="mr-3"
+                  />
+                  <span class="text-sm text-slate-700">{{ categoria.title }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Botones -->
+        <div class="flex items-center justify-end space-x-3 pt-4 border-t">
+          <button
+            type="button"
+            (click)="cerrarModal()"
+            class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
+          >
+            {{ isEditing ? 'Actualizar' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

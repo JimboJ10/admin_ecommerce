@@ -1,10 +1,11 @@
+import { Categorie } from './categorie.model';
+
 export interface Product {
   _id?: string;
   title: string;
   slug: string;
   sku: string;
   categorie: string | Categorie;
-  price_soles: number;
   price_usd: number;
   portada: string;
   imagen?: string;

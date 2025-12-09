@@ -1,59 +1,231 @@
-# AdminEcommerce
+# 📱 Panel de Administración E-commerce
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.9.
+Panel de administración moderno desarrollado con Angular 19 y Tailwind CSS 4.
 
-## Development server
+## 🚀 Requisitos Previos
 
-To start a local development server, run:
+- Node.js 18 o superior
+- npm o yarn
+- MongoDB corriendo en el puerto 27017
+- Backend corriendo en el puerto 3000
 
+## 📦 Instalación
+
+1. **Clonar el repositorio**
 ```bash
-ng serve
+cd admin_ecommerce
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+2. **Instalar dependencias**
 ```bash
-ng generate component component-name
+npm install
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
+3. **Verificar que el backend esté corriendo**
 ```bash
-ng generate --help
+cd ../backend
+npm run dev
 ```
 
-## Building
-
-To build the project run:
+## 🎯 Ejecución en Desarrollo
 
 ```bash
-ng build
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+El proyecto se ejecutará en `http://localhost:4200`
 
-## Running unit tests
+## 🔐 Credenciales de Acceso
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+**Usuario Admin por defecto:**
+- Email: admin@admin.com
+- Password: 123456
+
+## 📁 Estructura del Proyecto
+
+```
+src/app/
+├── components/
+│   ├── auth/          # Login
+│   ├── layout/        # Sidebar, Navbar, Main Layout
+│   └── pages/         # Dashboard, Users, Products, etc.
+├── services/          # Servicios de API
+├── models/            # Interfaces TypeScript
+├── core/
+│   ├── guards/        # Auth Guard
+│   └── interceptors/  # HTTP Interceptor
+└── app.routes.ts      # Configuración de rutas
+```
+
+## 🎨 Características
+
+- ✅ Autenticación con JWT
+- ✅ Dashboard con gráficos (Chart.js)
+- ✅ Gestión de Usuarios
+- ✅ Gestión de Categorías
+- ✅ Gestión de Productos (con galería y variedades)
+- ✅ Gestión de Sliders
+- ✅ Gestión de Cupones
+- ✅ Gestión de Descuentos
+- ✅ Diseño responsive
+- ✅ Paginación
+- ✅ Búsqueda y filtros
+
+## 🛠️ Tecnologías
+
+- Angular 19
+- Tailwind CSS 4
+- TypeScript 5.7
+- Chart.js
+- SweetAlert2
+- FontAwesome
+- ngx-pagination
+
+## 📦 Build para Producción
 
 ```bash
-ng test
+npm run build
 ```
 
-## Running end-to-end tests
+Los archivos optimizados se generarán en `dist/`
 
-For end-to-end (e2e) testing, run:
+## 🔧 Variables de Entorno
 
-```bash
-ng e2e
+El proyecto se conecta por defecto a:
+- Backend: `http://localhost:3000/api`
+
+Para cambiar la URL, modifica los servicios en `src/app/services/`
+
+## 🤝 Contribuir
+
+1. Fork el proyecto
+2. Crea tu rama (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add: nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto es de código abierto.
+
+## 👨‍💻 Autor
+
+Proyecto Full Stack E-commerce
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## ✅ Paso 26: Checklist Final
 
-## Additional Resources
+Crea un archivo `CHECKLIST.md`:
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+````markdown
+# ✅ Checklist de Implementación
+
+## Backend (Completado ✓)
+- [x] MongoDB configurado
+- [x] Modelos de datos
+- [x] Controladores
+- [x] Rutas API
+- [x] Middlewares de autenticación
+- [x] Upload de imágenes
+- [x] Servicio de email
+
+## Frontend Angular
+
+### Configuración Base
+- [x] Proyecto Angular 19 creado
+- [x] Tailwind CSS 4 configurado
+- [x] Rutas configuradas
+- [x] HTTP Interceptor
+- [x] Auth Guard
+
+### Servicios
+- [x] AuthService
+- [x] UserService
+- [x] CategorieService
+- [x] ProductService
+- [x] SliderService
+- [x] CuponeService
+- [x] DiscountService
+
+### Modelos
+- [x] User Model
+- [x] Categorie Model
+- [x] Product Model
+- [x] Slider Model
+- [x] Cupone Model
+- [x] Discount Model
+
+### Componentes de Autenticación
+- [x] Login Component
+
+### Componentes de Layout
+- [x] Main Layout
+- [x] Sidebar
+- [x] Navbar
+
+### Páginas
+- [x] Dashboard (con gráficos)
+- [x] Usuarios (CRUD completo)
+- [x] Categorías (CRUD completo)
+- [x] Productos (CRUD con galería y variedades)
+- [x] Sliders (CRUD completo)
+- [x] Cupones (CRUD completo)
+- [x] Descuentos (CRUD completo)
+
+### Funcionalidades
+- [x] Autenticación JWT
+- [x] Protección de rutas
+- [x] Upload de imágenes
+- [x] Paginación
+- [x] Búsqueda
+- [x] Filtros
+- [x] Validación de formularios
+- [x] Alertas (SweetAlert2)
+- [x] Diseño responsive
+
+## Testing
+- [ ] Pruebas unitarias
+- [ ] Pruebas E2E
+
+## Deployment
+- [ ] Build de producción
+- [ ] Configuración de servidor
+- [ ] SSL/HTTPS
+- [ ] Variables de entorno de producción
+```
+
+## 🎯 Paso 27: Script de Inicio Rápido
+
+Crea `start.bat` en la raíz del proyecto:
+
+````batch
+@echo off
+echo ========================================
+echo   Iniciando E-commerce Admin Panel
+echo ========================================
+echo.
+
+echo [1/3] Iniciando MongoDB...
+start "MongoDB" mongod
+
+timeout /t 3 /nobreak > nul
+
+echo [2/3] Iniciando Backend...
+cd backend
+start "Backend API" cmd /k "npm run dev"
+
+timeout /t 5 /nobreak > nul
+
+echo [3/3] Iniciando Frontend...
+cd ../admin_ecommerce
+start "Angular Frontend" cmd /k "npm start"
+
+echo.
+echo ========================================
+echo   Todos los servicios iniciados!
+echo ========================================
+echo   - MongoDB: localhost:27017
+echo   - Backend: http://localhost:3000
+echo   - Frontend: http://localhost:4200
+echo ========================================
+pause

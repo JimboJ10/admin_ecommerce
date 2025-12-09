@@ -1,0 +1,268 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-slate-800">Gestión de Descuentos</h1>
+      <p class="text-slate-600 mt-1">Administra las campañas de descuentos</p>
+    </div>
+    <button
+      (click)="abrirModal()"
+      class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 shadow-lg transition-all flex items-center space-x-2"
+    >
+      <i class="fas fa-plus"></i>
+      <span>Nuevo Descuento</span>
+    </button>
+  </div>
+
+  <!-- Tabla de Descuentos -->
+  <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-slate-800 to-slate-700 text-white">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Tipo Campaña</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Tipo Descuento</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Descuento</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Fecha Inicio</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Fecha Fin</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Segmento</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Estado</th>
+            <th class="px-6 py-4 text-center text-sm font-semibold">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          @for (descuento of descuentos | paginate: { itemsPerPage: itemsPorPagina, currentPage: paginaActual }; track descuento._id) {
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="px-6 py-4">
+                <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + obtenerColorCampania(descuento.type_campaign)">
+                  {{ obtenerTextoTipoCampania(descuento.type_campaign) }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">
+                {{ obtenerTextoTipoDescuento(descuento.type_discount) }}
+              </td>
+              <td class="px-6 py-4 text-sm font-semibold text-green-600">
+                {{ descuento.type_discount === 1 ? descuento.discount + '%' : '$' + descuento.discount }}
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">
+                {{ descuento.start_date | date: 'dd/MM/yyyy HH:mm' }}
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">
+                {{ descuento.end_date | date: 'dd/MM/yyyy HH:mm' }}
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">
+                {{ obtenerTextoSegmento(descuento.type_segment) }}
+              </td>
+              <td class="px-6 py-4">
+                <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + obtenerColorEstado(descuento.state)">
+                  {{ descuento.state === 1 ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center justify-center space-x-2">
+                  <button
+                    (click)="abrirModal(descuento)"
+                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Editar"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button
+                    (click)="eliminarDescuento(descuento)"
+                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Eliminar"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="px-6 py-12 text-center text-slate-500">
+                <i class="fas fa-percentage text-4xl mb-4 text-slate-300"></i>
+                <p class="text-lg font-semibold">No se encontraron descuentos</p>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-center">
+      <pagination-controls
+        (pageChange)="paginaActual = $event"
+        previousLabel="Anterior"
+        nextLabel="Siguiente"
+      ></pagination-controls>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear/Editar Descuento -->
+@if (showModal) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8">
+      <!-- Header Modal -->
+      <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+        <h2 class="text-xl font-bold text-white">
+          {{ isEditing ? 'Editar Descuento' : 'Nuevo Descuento' }}
+        </h2>
+        <button (click)="cerrarModal()" class="text-white hover:bg-white/20 p-2 rounded-lg transition-colors">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Body Modal -->
+      <form [formGroup]="discountForm" (ngSubmit)="guardarDescuento()" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Tipo de Campaña -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Tipo de Campaña</label>
+            <select
+              formControlName="type_campaign"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option [value]="1">Campaña Normal</option>
+              <option [value]="2">Venta Flash</option>
+            </select>
+          </div>
+
+          <!-- Tipo de Descuento -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Tipo de Descuento</label>
+            <select
+              formControlName="type_discount"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option [value]="1">Porcentaje (%)</option>
+              <option [value]="2">Moneda ($)</option>
+            </select>
+          </div>
+
+          <!-- Descuento -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Valor del Descuento <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              formControlName="discount"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="20"
+            />
+          </div>
+
+          <!-- Tipo de Segmento -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Aplicar a</label>
+            <select
+              formControlName="type_segment"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option [value]="1">Productos</option>
+              <option [value]="2">Categorías</option>
+            </select>
+          </div>
+
+          <!-- Fecha Inicio -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Fecha Inicio <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              formControlName="start_date"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <!-- Fecha Fin -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Fecha Fin <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              formControlName="end_date"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <!-- Estado -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Estado</label>
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" formControlName="state" [value]="1" class="mr-2" />
+                <span class="text-sm text-slate-700">Activo</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" formControlName="state" [value]="0" class="mr-2" />
+                <span class="text-sm text-slate-700">Inactivo</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Productos -->
+        @if (discountForm.get('type_segment')?.value === 1) {
+          <div class="border-t pt-4">
+            <label class="block text-sm font-semibold text-slate-700 mb-3">Seleccionar Productos</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-slate-200 rounded-lg">
+              @for (producto of productos; track producto._id) {
+                <label class="flex items-center p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    [checked]="productosSeleccionados.includes(producto._id!)"
+                    (change)="toggleProducto(producto._id!)"
+                    class="mr-3"
+                  />
+                  <span class="text-sm text-slate-700">{{ producto.title }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Categorías -->
+        @if (discountForm.get('type_segment')?.value === 2) {
+          <div class="border-t pt-4">
+            <label class="block text-sm font-semibold text-slate-700 mb-3">Seleccionar Categorías</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-slate-200 rounded-lg">
+              @for (categoria of categorias; track categoria._id) {
+                <label class="flex items-center p-3 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    [checked]="categoriasSeleccionadas.includes(categoria._id!)"
+                    (change)="toggleCategoria(categoria._id!)"
+                    class="mr-3"
+                  />
+                  <span class="text-sm text-slate-700">{{ categoria.title }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Botones -->
+        <div class="flex items-center justify-end space-x-3 pt-4 border-t">
+          <button
+            type="button"
+            (click)="cerrarModal()"
+            class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
+          >
+            {{ isEditing ? 'Actualizar' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { UserService } from '../../../services/user.service';
 import { User } from '../../../models/user.model';
 import Swal from 'sweetalert2';
@@ -9,7 +9,7 @@ import { NgxPaginationModule } from 'ngx-pagination';
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgxPaginationModule],
+  imports: [CommonModule, ReactiveFormsModule, NgxPaginationModule, FormsModule],
   templateUrl: './users.component.html'
 })
 export class UsersComponent implements OnInit {

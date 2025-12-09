@@ -21,14 +21,14 @@ export const routes: Routes = [
         path: 'users',
         loadComponent: () => import('./components/pages/users/users.component').then(m => m.UsersComponent)
       },
-      // {
-      //   path: 'categories',
-      //   loadComponent: () => import('./components/pages/categories/categories.component').then(m => m.CategoriesComponent)
-      // },
-      // {
-      //   path: 'products',
-      //   loadComponent: () => import('./components/pages/products/products.component').then(m => m.ProductsComponent)
-      // },
+      {
+        path: 'categories',
+        loadComponent: () => import('./components/pages/categories/categories.component').then(m => m.CategoriesComponent)
+      },
+      {
+        path: 'products',
+        loadComponent: () => import('./components/pages/products/products.component').then(m => m.ProductsComponent)
+      },
       // {
       //   path: 'products/create',
       //   loadComponent: () => import('./components/pages/products/create-product/create-product.component').then(m => m.CreateProductComponent)
@@ -37,18 +37,18 @@ export const routes: Routes = [
       //   path: 'products/edit/:id',
       //   loadComponent: () => import('./components/pages/products/edit-product/edit-product.component').then(m => m.EditProductComponent)
       // },
-      // {
-      //   path: 'sliders',
-      //   loadComponent: () => import('./components/pages/sliders/sliders.component').then(m => m.SlidersComponent)
-      // },
-      // {
-      //   path: 'cupones',
-      //   loadComponent: () => import('./components/pages/cupones/cupones.component').then(m => m.CuponesComponent)
-      // },
-      // {
-      //   path: 'discounts',
-      //   loadComponent: () => import('./components/pages/discounts/discounts.component').then(m => m.DiscountsComponent)
-      // },
+      {
+        path: 'sliders',
+        loadComponent: () => import('./components/pages/sliders/sliders.component').then(m => m.SlidersComponent)
+      },
+      {
+        path: 'cupones',
+        loadComponent: () => import('./components/pages/cupones/cupones.component').then(m => m.CuponesComponent)
+      },
+      {
+        path: 'discounts',
+        loadComponent: () => import('./components/pages/discounts/discounts.component').then(m => m.DiscountsComponent)
+      },
       {
         path: '',
         redirectTo: 'dashboard',

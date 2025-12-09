@@ -1,0 +1,500 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-slate-800">Gestión de Productos</h1>
+      <p class="text-slate-600 mt-1">Administra el catálogo de productos</p>
+    </div>
+    <button
+      (click)="abrirModal()"
+      class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 shadow-lg transition-all flex items-center space-x-2"
+    >
+      <i class="fas fa-plus"></i>
+      <span>Nuevo Producto</span>
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-2xl shadow-md p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="relative">
+        <input
+          type="text"
+          [(ngModel)]="busqueda"
+          (keyup)="buscarProducto()"
+          placeholder="Buscar por nombre o SKU..."
+          class="w-full px-4 py-3 pl-12 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <i class="fas fa-search absolute left-4 top-4 text-slate-400"></i>
+      </div>
+      <select
+        [(ngModel)]="categoriaFiltro"
+        (change)="filtrarPorCategoria()"
+        class="px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">Todas las categorías</option>
+        @for (categoria of categorias; track categoria._id) {
+          <option [value]="categoria._id">{{ categoria.title }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Tabla de Productos -->
+  <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gradient-to-r from-slate-800 to-slate-700 text-white">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Imagen</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Producto</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">SKU</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Categoría</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Precio USD</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Stock</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold">Estado</th>
+            <th class="px-6 py-4 text-center text-sm font-semibold">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          @for (producto of productosFiltrados | paginate: { itemsPerPage: itemsPorPagina, currentPage: paginaActual }; track producto._id) {
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="px-6 py-4">
+                <img [src]="producto.imagen" [alt]="producto.title" class="w-16 h-16 object-cover rounded-lg" />
+              </td>
+              <td class="px-6 py-4">
+                <p class="font-semibold text-slate-800">{{ producto.title }}</p>
+                <p class="text-xs text-slate-500">{{ producto.resumen | slice:0:50 }}...</p>
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-600">{{ producto.sku }}</td>
+              <td class="px-6 py-4 text-sm text-slate-600">
+                {{ getNombreCategoria(producto.categorie) }}
+              </td>
+              <td class="px-6 py-4 text-sm font-semibold text-slate-800">${{ producto.price_usd }}</td>
+              <td class="px-6 py-4">
+                <span [class]="producto.stock > 0 ? 'text-green-600' : 'text-red-600'" class="font-semibold">
+                  {{ producto.stock }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + obtenerColorEstado(producto.state)">
+                  {{ obtenerTextoEstado(producto.state) }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center justify-center space-x-2">
+                  <button
+                    (click)="abrirModal(producto)"
+                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Editar"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button
+                    (click)="abrirModalGaleria(producto)"
+                    class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    title="Galería"
+                  >
+                    <i class="fas fa-images"></i>
+                  </button>
+                  @if (producto.type_inventario === 2) {
+                    <button
+                      (click)="abrirModalVariedades(producto)"
+                      class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                      title="Variedades"
+                    >
+                      <i class="fas fa-list"></i>
+                    </button>
+                  }
+                  <button
+                    (click)="eliminarProducto(producto)"
+                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Eliminar"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="px-6 py-12 text-center text-slate-500">
+                <i class="fas fa-box-open text-4xl mb-4 text-slate-300"></i>
+                <p class="text-lg font-semibold">No se encontraron productos</p>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-center">
+      <pagination-controls
+        (pageChange)="paginaActual = $event"
+        previousLabel="Anterior"
+        nextLabel="Siguiente"
+      ></pagination-controls>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear/Editar Producto -->
+@if (showModal) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8">
+      <!-- Header Modal -->
+      <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+        <h2 class="text-xl font-bold text-white">
+          {{ isEditing ? 'Editar Producto' : 'Nuevo Producto' }}
+        </h2>
+        <button (click)="cerrarModal()" class="text-white hover:bg-white/20 p-2 rounded-lg transition-colors">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Body Modal -->
+      <form [formGroup]="productForm" (ngSubmit)="guardarProducto()" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Título -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Título del Producto <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              formControlName="title"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ej: Laptop HP 15 pulgadas"
+            />
+          </div>
+
+          <!-- SKU -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              SKU <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              formControlName="sku"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ej: LAP-HP-001"
+            />
+          </div>
+
+          <!-- Categoría -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Categoría <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="categorie"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Seleccione una categoría</option>
+              @for (categoria of categorias; track categoria._id) {
+                <option [value]="categoria._id">{{ categoria.title }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Precio USD -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Precio USD <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-slate-500">$</span>
+              <input
+                type="number"
+                formControlName="price_usd"
+                class="w-full pl-8 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0.00"
+                step="0.01"
+              />
+            </div>
+            @if (productForm.get('price_usd')?.invalid && productForm.get('price_usd')?.touched) {
+              <p class="text-red-500 text-xs mt-1">El precio es requerido</p>
+            }
+          </div>
+
+          <!-- Tipo de Inventario -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Tipo de Inventario</label>
+            <select
+              formControlName="type_inventario"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option [value]="1">Unitario</option>
+              <option [value]="2">Multiple (Variedades)</option>
+            </select>
+          </div>
+
+          <!-- Stock -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Stock</label>
+            <input
+              type="number"
+              formControlName="stock"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="0"
+            />
+          </div>
+
+          <!-- Tags -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Tags (separados por coma)
+            </label>
+            <input
+              type="text"
+              formControlName="tags"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="laptop, hp, computadora"
+            />
+          </div>
+
+          <!-- Resumen -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Resumen <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              formControlName="resumen"
+              rows="2"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Resumen corto del producto"
+            ></textarea>
+          </div>
+
+          <!-- Descripción con Quill -->
+          <div class="md:col-span-2">
+          <label class="block text-sm font-semibold text-slate-700 mb-2">
+            Descripción <span class="text-red-500">*</span>
+          </label>
+          <quill-editor
+            formControlName="description"
+            [modules]="quillConfig"
+            [styles]="{ height: '300px' }"
+          ></quill-editor>
+          @if (productForm.get('description')?.invalid && productForm.get('description')?.touched) {
+            <p class="text-red-500 text-xs mt-1">La descripción es requerida</p>
+          }
+        </div>
+
+          <!-- Imagen Portada -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-slate-700 mb-2">
+              Imagen Portada <span class="text-red-500">*</span>
+            </label>
+            <div class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer">
+              <input
+                type="file"
+                (change)="seleccionarPortada($event)"
+                accept="image/*"
+                class="hidden"
+                #fileInput
+              />
+              @if (portadaPreview) {
+                <div class="relative">
+                  <img [src]="portadaPreview" class="max-h-48 mx-auto rounded-lg" />
+                  <button
+                    type="button"
+                    (click)="portadaPreview = null; portadaFile = null; fileInput.value = ''"
+                    class="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              } @else {
+                <div (click)="fileInput.click()">
+                  <i class="fas fa-cloud-upload-alt text-4xl text-slate-400 mb-2"></i>
+                  <p class="text-sm text-slate-600">Click para subir imagen</p>
+                  <p class="text-xs text-slate-400">PNG, JPG hasta 5MB</p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Estado -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Estado</label>
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" formControlName="state" [value]="1" class="mr-2" />
+                <span class="text-sm text-slate-700">Borrador</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" formControlName="state" [value]="2" class="mr-2" />
+                <span class="text-sm text-slate-700">Publicado</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex items-center justify-end space-x-3 pt-4 border-t">
+          <button
+            type="button"
+            (click)="cerrarModal()"
+            class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
+          >
+            {{ isEditing ? 'Actualizar' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Galería -->
+@if (showGaleriaModal && currentProduct) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-green-600 to-teal-600 px-6 py-4 flex items-center justify-between rounded-t-2xl sticky top-0">
+        <h2 class="text-xl font-bold text-white">Galería de Imágenes - {{ currentProduct.title }}</h2>
+        <button (click)="cerrarModalGaleria()" class="text-white hover:bg-white/20 p-2 rounded-lg transition-colors">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <!-- Subir nueva imagen -->
+        <div class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors">
+          <input
+            type="file"
+            (change)="seleccionarImagenGaleria($event)"
+            accept="image/*"
+            class="hidden"
+            #galeriaInput
+          />
+          @if (galeriaPreview) {
+            <div class="space-y-4">
+              <img [src]="galeriaPreview" class="max-h-48 mx-auto rounded-lg" />
+              <button
+                type="button"
+                (click)="agregarImagenGaleria()"
+                class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <i class="fas fa-upload mr-2"></i>Subir Imagen
+              </button>
+            </div>
+          } @else {
+            <div (click)="galeriaInput.click()" class="cursor-pointer">
+              <i class="fas fa-cloud-upload-alt text-4xl text-slate-400 mb-2"></i>
+              <p class="text-sm text-slate-600">Click para subir nueva imagen</p>
+            </div>
+          }
+        </div>
+
+        <!-- Grid de imágenes -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          @for (galeria of currentProduct.galerias; track galeria._id) {
+            <div class="relative group">
+              <img [src]="galeria.imagen" class="w-full h-40 object-cover rounded-lg" />
+              <button
+                (click)="eliminarImagenGaleria(galeria._id)"
+                class="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+              >
+                <i class="fas fa-trash text-xs"></i>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Variedades -->
+@if (showVariedadModal && currentProduct) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-y-auto">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4 flex items-center justify-between rounded-t-2xl sticky top-0">
+        <h2 class="text-xl font-bold text-white">Variedades - {{ currentProduct.title }}</h2>
+        <button (click)="cerrarModalVariedades()" class="text-white hover:bg-white/20 p-2 rounded-lg transition-colors">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <!-- Formulario -->
+        <form [formGroup]="variedadForm" (ngSubmit)="guardarVariedad()" class="bg-slate-50 p-4 rounded-lg">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Valor <span class="text-red-500">*</span></label>
+              <input
+                type="text"
+                formControlName="valor"
+                placeholder="Ej: Talla M, Color Rojo"
+                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-2">Stock <span class="text-red-500">*</span></label>
+              <input
+                type="number"
+                formControlName="stock"
+                placeholder="0"
+                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+          </div>
+          <div class="mt-4 flex justify-end space-x-2">
+            @if (isEditingVariedad) {
+              <button
+                type="button"
+                (click)="isEditingVariedad = false; variedadForm.reset({ product: currentProduct._id })"
+                class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
+              >
+                Cancelar
+              </button>
+            }
+            <button
+              type="submit"
+              class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              {{ isEditingVariedad ? 'Actualizar' : 'Agregar' }}
+            </button>
+          </div>
+        </form>
+
+        <!-- Lista de variedades -->
+        <div class="space-y-2">
+          @for (variedad of variedades; track variedad._id) {
+            <div class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-lg hover:shadow-md transition-shadow">
+              <div>
+                <p class="font-semibold text-slate-800">{{ variedad.valor }}</p>
+                <p class="text-sm text-slate-500">Stock: {{ variedad.stock }}</p>
+              </div>
+              <div class="flex space-x-2">
+                <button
+                  (click)="editarVariedad(variedad)"
+                  class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                >
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button
+                  (click)="eliminarVariedad(variedad._id!)"
+                  class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          } @empty {
+            <p class="text-center text-slate-500 py-8">No hay variedades registradas</p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
