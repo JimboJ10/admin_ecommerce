@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -38,7 +38,8 @@ export class CuponesComponent implements OnInit {
     private fb: FormBuilder,
     private cuponeService: CuponeService,
     private productService: ProductService,
-    private categorieService: CategorieService
+    private categorieService: CategorieService,
+    private cdr: ChangeDetectorRef
   ) {
     this.cuponeForm = this.fb.group({
       _id: [''],
@@ -57,6 +58,22 @@ export class CuponesComponent implements OnInit {
     this.cargarConfiguracion();
   }
 
+  get typeSegment(): number {
+    const value = this.cuponeForm.get('type_segment')?.value;
+    const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
+    return numValue || 1;
+  }
+
+  mostrarProductos(): boolean {
+    const resultado = this.typeSegment === 1;
+    return resultado;
+  }
+
+  mostrarCategorias(): boolean {
+    const resultado = this.typeSegment === 2;
+    return resultado;
+  }
+
   cargarCupones() {
     this.cuponeService.list(this.busqueda).subscribe({
       next: (response) => {
@@ -71,13 +88,15 @@ export class CuponesComponent implements OnInit {
   }
 
   cargarConfiguracion() {
+    
     this.cuponeService.config().subscribe({
       next: (response) => {
-        this.productos = response.products;
-        this.categorias = response.categories;
+        this.productos = response.products || [];
+        this.categorias = response.categories || [];
       },
       error: (error) => {
-        console.error('Error al cargar configuración:', error);
+        console.error('❌ Error al cargar configuración:', error);
+        Swal.fire('Error', 'No se pudo cargar la configuración', 'error');
       }
     });
   }
@@ -94,6 +113,7 @@ export class CuponesComponent implements OnInit {
   }
 
   abrirModal(cupone?: Cupone) {
+    
     this.isEditing = !!cupone;
     this.showModal = true;
     this.productosSeleccionados = [];
@@ -222,5 +242,13 @@ export class CuponesComponent implements OnInit {
 
   obtenerColorEstado(estado?: number): string {
     return estado === 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+  }
+
+  trackByProductoId(index: number, producto: Product): string {
+    return producto._id || index.toString();
+  }
+
+  trackByCategoriaId(index: number, categoria: Categorie): string {
+    return categoria._id || index.toString();
   }
 }

@@ -9,11 +9,12 @@ import { Categorie } from '../../../models/categorie.model';
 import Swal from 'sweetalert2';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { QuillModule } from 'ngx-quill';
+import { LoadingSpinnerComponent } from "../../../shared/components/loading-spinner/loading-spinner.component";
 
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgxPaginationModule, QuillModule],
+  imports: [CommonModule, LoadingSpinnerComponent, ReactiveFormsModule, FormsModule, NgxPaginationModule, QuillModule, LoadingSpinnerComponent],
   templateUrl: './products.component.html'
 })
 export class ProductsComponent implements OnInit {
@@ -33,9 +34,10 @@ export class ProductsComponent implements OnInit {
   portadaFile: File | null = null;
   galeriaFile: File | null = null;
   galeriaPreview: string | null = null;
+  loading = false;
   
   paginaActual: number = 1;
-  itemsPorPagina: number = 10;
+  itemsPorPagina: number = 5;
 
   quillConfig = {
     toolbar: [
@@ -89,14 +91,17 @@ export class ProductsComponent implements OnInit {
   }
 
   cargarProductos() {
+    this.loading = true;
     this.productService.list(this.busqueda, this.categoriaFiltro).subscribe({
       next: (response) => {
         this.productos = response.products;
         this.productosFiltrados = this.productos;
+        this.loading = false;
       },
       error: (error) => {
         console.error('Error al cargar productos:', error);
         Swal.fire('Error', 'No se pudieron cargar los productos', 'error');
+        this.loading = false;
       }
     });
   }
@@ -182,6 +187,8 @@ export class ProductsComponent implements OnInit {
       return;
     }
 
+    this.loading = true;
+
     const formData = new FormData();
     Object.keys(this.productForm.value).forEach(key => {
       if (key !== '_id' || this.isEditing) {
@@ -202,6 +209,7 @@ export class ProductsComponent implements OnInit {
         },
         error: (error) => {
           Swal.fire('Error', error.error.message || 'No se pudo actualizar el producto', 'error');
+          this.loading = false;
         }
       });
     } else {
@@ -213,6 +221,7 @@ export class ProductsComponent implements OnInit {
         },
         error: (error) => {
           Swal.fire('Error', error.error.message || 'No se pudo registrar el producto', 'error');
+          this.loading = false;
         }
       });
     }
@@ -230,6 +239,7 @@ export class ProductsComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed && producto._id) {
+        this.loading = true;
         this.productService.delete(producto._id).subscribe({
           next: () => {
             Swal.fire('¡Eliminado!', 'El producto ha sido eliminado', 'success');
@@ -237,6 +247,7 @@ export class ProductsComponent implements OnInit {
           },
           error: (error) => {
             Swal.fire('Error', 'No se pudo eliminar el producto', 'error');
+            this.loading = false;
           }
         });
       }
@@ -273,32 +284,46 @@ export class ProductsComponent implements OnInit {
 
   guardarVariedad() {
     if (this.variedadForm.invalid) {
-      Object.keys(this.variedadForm.controls).forEach(key => {
-        this.variedadForm.get(key)?.markAsTouched();
-      });
+      Swal.fire('Error', 'Complete todos los campos', 'error');
       return;
     }
-
+  
+    this.loading = true;
+  
+    const variedadData = { ...this.variedadForm.value };
+  
+    if (!this.isEditingVariedad) {
+      delete variedadData._id;
+    }
+  
     if (this.isEditingVariedad) {
-      this.productService.updateVariedad(this.variedadForm.value).subscribe({
+      // Actualizar variedad existente
+      this.productService.updateVariedad(variedadData).subscribe({
         next: () => {
-          Swal.fire('¡Éxito!', 'Variedad actualizada', 'success');
+          this.loading = false;
+          Swal.fire('Éxito', 'Variedad actualizada correctamente', 'success');
           this.variedadForm.reset({ product: this.currentProduct?._id });
           this.isEditingVariedad = false;
           this.cargarVariedades();
         },
         error: (error) => {
+          console.error('Error al actualizar variedad:', error);
+          this.loading = false;
           Swal.fire('Error', 'No se pudo actualizar la variedad', 'error');
         }
       });
     } else {
-      this.productService.registerVariedad(this.variedadForm.value).subscribe({
+      // Registrar nueva variedad
+      this.productService.registerVariedad(variedadData).subscribe({
         next: () => {
-          Swal.fire('¡Éxito!', 'Variedad registrada', 'success');
+          this.loading = false;
+          Swal.fire('Éxito', 'Variedad registrada correctamente', 'success');
           this.variedadForm.reset({ product: this.currentProduct?._id });
           this.cargarVariedades();
         },
         error: (error) => {
+          console.error('Error al registrar variedad:', error);
+          this.loading = false;
           Swal.fire('Error', 'No se pudo registrar la variedad', 'error');
         }
       });
@@ -366,6 +391,8 @@ export class ProductsComponent implements OnInit {
       return;
     }
 
+    this.loading = true;
+
     const formData = new FormData();
     formData.append('_id', this.currentProduct._id!);
     formData.append('imagen', this.galeriaFile);
@@ -380,12 +407,17 @@ export class ProductsComponent implements OnInit {
           this.productService.show(this.currentProduct._id).subscribe({
             next: (response) => {
               this.currentProduct = response.product;
+              this.loading = false;
+            },
+            error: () => {
+              this.loading = false;
             }
           });
         }
       },
       error: (error) => {
         Swal.fire('Error', 'No se pudo agregar la imagen', 'error');
+        this.loading = false;
       }
     });
   }

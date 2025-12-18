@@ -1,33 +1,51 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
-import { CurrencyFormatPipe } from '../../../shared/pipes/currency-format.pipe';
+import { SaleService } from '../../../services/sale.service';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective, CurrencyFormatPipe],
+  imports: [CommonModule, BaseChartDirective, LoadingSpinnerComponent],
   templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent implements OnInit {
-  // Estadísticas
-  totalVentas = 25800;
-  totalProductos = 145;
-  totalClientes = 892;
-  pedidosPendientes = 23;
+  loading = false;
+
+  // Estadísticas reales
+  totalSales = 0;
+  totalRevenue = 0;
+  totalUsers = 0;
+  totalProducts = 0;
+  recentSales = 0;
+
+  // Datos para gráficos
+  salesByDay: any[] = [];
+  topProducts: any[] = [];
+  latestSales: any[] = [];
 
   // Configuración de gráfico de ventas
   public lineChartData: ChartData<'line'> = {
-    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'],
+    labels: [],
     datasets: [
       {
-        data: [12000, 19000, 15000, 25000, 22000, 30000, 25800],
-        label: 'Ventas 2025',
+        data: [],
+        label: 'Ventas (Últimos 7 días)',
         fill: true,
         tension: 0.4,
         borderColor: '#3b82f6',
         backgroundColor: 'rgba(59, 130, 246, 0.1)'
+      },
+      {
+        data: [],
+        label: 'Ingresos (USD)',
+        fill: true,
+        tension: 0.4,
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)'
       }
     ]
   };
@@ -40,52 +58,105 @@ export class DashboardComponent implements OnInit {
         display: true,
         position: 'top'
       }
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
     }
   };
 
   public lineChartType: ChartType = 'line';
 
-  // Configuración de gráfico de productos
+  // Configuración de gráfico de productos por categoría
   public doughnutChartData: ChartData<'doughnut'> = {
-    labels: ['Electrónicos', 'Ropa', 'Hogar', 'Deportes'],
+    labels: [],
     datasets: [
       {
-        data: [45, 25, 20, 10],
-        backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981']
+        data: [],
+        backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b']
       }
     ]
   };
 
   public doughnutChartType: ChartType = 'doughnut';
 
-  // Últimos pedidos
-  ultimosPedidos = [
-    { id: '#ORD-001', cliente: 'Juan Pérez', total: 250, estado: 'Pendiente', fecha: '08/12/2025' },
-    { id: '#ORD-002', cliente: 'María García', total: 180, estado: 'Completado', fecha: '08/12/2025' },
-    { id: '#ORD-003', cliente: 'Carlos López', total: 420, estado: 'Procesando', fecha: '07/12/2025' },
-    { id: '#ORD-004', cliente: 'Ana Martínez', total: 95, estado: 'Completado', fecha: '07/12/2025' },
-    { id: '#ORD-005', cliente: 'Pedro Sánchez', total: 310, estado: 'Pendiente', fecha: '06/12/2025' }
-  ];
-
-  // Productos más vendidos
-  productosMasVendidos = [
-    { nombre: 'Laptop HP 15"', ventas: 156, imagen: 'https://via.placeholder.com/50' },
-    { nombre: 'Mouse Logitech', ventas: 234, imagen: 'https://via.placeholder.com/50' },
-    { nombre: 'Teclado Mecánico', ventas: 189, imagen: 'https://via.placeholder.com/50' },
-    { nombre: 'Monitor Samsung 24"', ventas: 145, imagen: 'https://via.placeholder.com/50' }
-  ];
+  constructor(
+    private saleService: SaleService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
-    // Aquí puedes cargar datos reales desde tu backend
+    this.loadDashboardStats();
   }
 
-  obtenerColorEstado(estado: string): string {
-    const colores: any = {
-      'Pendiente': 'bg-yellow-100 text-yellow-800',
-      'Procesando': 'bg-blue-100 text-blue-800',
-      'Completado': 'bg-green-100 text-green-800',
-      'Cancelado': 'bg-red-100 text-red-800'
-    };
-    return colores[estado] || 'bg-gray-100 text-gray-800';
+  loadDashboardStats() {
+    this.loading = true;
+    this.saleService.getStats().subscribe({
+      next: (stats) => {
+
+        // Actualizar estadísticas generales
+        this.totalSales = stats.totalSales || 0;
+        this.totalRevenue = stats.totalRevenue || 0;
+        this.totalUsers = stats.totalUsers || 0;
+        this.totalProducts = stats.totalProducts || 0;
+        this.recentSales = stats.recentSales || 0;
+
+        // Actualizar gráfico de ventas por día
+        if (stats.salesByDay && stats.salesByDay.length > 0) {
+          this.salesByDay = stats.salesByDay;
+          this.lineChartData.labels = stats.salesByDay.map((d: any) => d.date);
+          this.lineChartData.datasets[0].data = stats.salesByDay.map((d: any) => d.sales);
+          this.lineChartData.datasets[1].data = stats.salesByDay.map((d: any) => d.revenue);
+        }
+
+        // Actualizar top productos
+        if (stats.topProducts && stats.topProducts.length > 0) {
+          this.topProducts = stats.topProducts.slice(0, 4);
+        }
+
+        // Actualizar últimas ventas
+        if (stats.latestSales && stats.latestSales.length > 0) {
+          this.latestSales = stats.latestSales;
+        }
+
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar estadísticas:', error);
+        this.loading = false;
+      }
+    });
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  }
+
+  formatDate(date: Date): string {
+    return new Date(date).toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  getProductImage(portada: string): string {
+    if (portada) {
+      return `http://localhost:3000/api/products/uploads/product/${portada}`;
+    }
+    return 'https://via.placeholder.com/50';
+  }
+
+  viewAllSales() {
+    this.router.navigate(['/sales']);
+  }
+
+  viewAllProducts() {
+    this.router.navigate(['/products']);
   }
 }

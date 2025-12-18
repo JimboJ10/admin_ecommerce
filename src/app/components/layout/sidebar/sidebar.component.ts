@@ -44,11 +44,13 @@ export class SidebarComponent {
       ]
     },
     {
-      title: 'Sliders',
-      icon: 'fa-images',
-      route: '/sliders',
-      expanded: false
-    }
+      title: 'Ventas',
+      icon: 'fa-shopping-cart',
+      route: '/sales',
+      expanded: false,
+      badge: 'Nuevo',
+      badgeColor: 'bg-green-500'
+    },
   ];
 
   constructor(
@@ -60,10 +62,5 @@ export class SidebarComponent {
     if (item.submenu) {
       item.expanded = !item.expanded;
     }
-  }
-
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

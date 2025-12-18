@@ -29,18 +29,6 @@ export const routes: Routes = [
         path: 'products',
         loadComponent: () => import('./components/pages/products/products.component').then(m => m.ProductsComponent)
       },
-      // {
-      //   path: 'products/create',
-      //   loadComponent: () => import('./components/pages/products/create-product/create-product.component').then(m => m.CreateProductComponent)
-      // },
-      // {
-      //   path: 'products/edit/:id',
-      //   loadComponent: () => import('./components/pages/products/edit-product/edit-product.component').then(m => m.EditProductComponent)
-      // },
-      {
-        path: 'sliders',
-        loadComponent: () => import('./components/pages/sliders/sliders.component').then(m => m.SlidersComponent)
-      },
       {
         path: 'cupones',
         loadComponent: () => import('./components/pages/cupones/cupones.component').then(m => m.CuponesComponent)
@@ -48,6 +36,14 @@ export const routes: Routes = [
       {
         path: 'discounts',
         loadComponent: () => import('./components/pages/discounts/discounts.component').then(m => m.DiscountsComponent)
+      },
+      {
+        path: 'sales',
+        loadComponent: () => import('./components/pages/sales/sales.component').then(m => m.SalesComponent)
+      },
+      {
+        path: 'sales/:id',
+        loadComponent: () => import('./components/pages/sale-detail/sale-detail.component').then(m => m.SaleDetailComponent)
       },
       {
         path: '',

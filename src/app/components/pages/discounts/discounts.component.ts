@@ -55,6 +55,22 @@ export class DiscountsComponent implements OnInit {
     this.cargarConfiguracion();
   }
 
+  get typeSegment(): number {
+    const value = this.discountForm.get('type_segment')?.value;
+    const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
+    return numValue || 1;
+  }
+  
+  mostrarProductos(): boolean {
+    const resultado = this.typeSegment === 1;
+    return resultado;
+  }
+  
+  mostrarCategorias(): boolean {
+    const resultado = this.typeSegment === 2;
+    return resultado;
+  }
+
   cargarDescuentos() {
     this.discountService.list().subscribe({
       next: (response) => {
@@ -68,18 +84,21 @@ export class DiscountsComponent implements OnInit {
   }
 
   cargarConfiguracion() {
+    
     this.discountService.config().subscribe({
       next: (response) => {
-        this.productos = response.products;
-        this.categorias = response.categories;
+        this.productos = response.products || [];
+        this.categorias = response.categories || [];
       },
       error: (error) => {
-        console.error('Error al cargar configuración:', error);
+        console.error('❌ Error al cargar configuración:', error);
+        Swal.fire('Error', 'No se pudo cargar la configuración', 'error');
       }
     });
   }
 
   abrirModal(descuento?: Discount) {
+    
     this.isEditing = !!descuento;
     this.showModal = true;
     this.productosSeleccionados = [];
@@ -100,7 +119,12 @@ export class DiscountsComponent implements OnInit {
       this.productosSeleccionados = descuento.products.map(p => p._id);
       this.categoriasSeleccionadas = descuento.categories.map(c => c._id);
     } else {
-      this.discountForm.reset({ type_campaign: 1, type_discount: 1, type_segment: 1, state: 1 });
+      this.discountForm.reset({ 
+        type_campaign: 1, 
+        type_discount: 1, 
+        type_segment: 1, 
+        state: 1 
+      });
     }
   }
 
@@ -232,5 +256,13 @@ export class DiscountsComponent implements OnInit {
 
   obtenerColorCampania(tipo: number): string {
     return tipo === 1 ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800';
+  }
+
+  trackByProductoId(index: number, producto: Product): string {
+    return producto._id || index.toString();
+  }
+
+  trackByCategoriaId(index: number, categoria: Categorie): string {
+    return categoria._id || index.toString();
   }
 }
